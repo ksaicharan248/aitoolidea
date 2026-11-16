@@ -1,0 +1,141 @@
+BUILD PROMPT — OFFLINE HTML CANVAS / ANNOTATION WHITEBOARD
+
+Act as a senior frontend engineer. Build a polished, reliable, offline-first annotation and whiteboard application using HTML, CSS, and vanilla JavaScript.
+
+PRIMARY DELIVERY CONSTRAINTS
+1. The application must run by opening index.html directly from a local file path (file:///...), including by double-clicking the file.
+2. Do not require a web server, localhost, Node.js, npm, a bundler, a backend, a database, or a build step to run the finished application.
+3. No network requests at runtime. Do not depend on CDN scripts, remote fonts, remote icons, analytics, or external APIs.
+4. Prefer a single self-contained index.html with CSS and JavaScript embedded. If a third-party library is needed, vendor its production browser build locally and bundle it into the HTML where practical. If a separate local library file is unavoidable, include it in the delivery folder and ensure index.html loads it using a relative path that works under file://. Explain any unavoidable browser restrictions.
+5. Deliver the complete runnable files, not pseudocode or a mockup. Include a README.txt with exact open/run instructions and explain that no server is needed.
+6. Do not add features that require hosting or accounts. No telemetry or external data transmission.
+
+TECHNOLOGY / LIBRARY SELECTION
+Evaluate Fabric.js first as the primary canvas/object interaction engine because the app needs free drawing, selectable objects, editable text, shapes, and object manipulation. Verify the selected version's browser build and API before implementation. Keep the library local; do not load it from a CDN.
+If Fabric.js cannot reliably meet a specific requirement, use a small amount of native Canvas 2D and Pointer Events or another MIT-licensed local library. Avoid adding multiple overlapping canvas libraries. Document the chosen library, version, license, and why it was selected.
+Use vanilla JavaScript modules only if they work under file:// in the target browsers; otherwise use classic scripts to avoid file-origin module restrictions.
+
+VISUAL DESIGN
+- Professional, distraction-free whiteboard.
+- Main application chrome: dark/black background with clearly legible white text and icons.
+- Drawing surface: clean white canvas/page with a subtle border or shadow against the dark application background.
+- Responsive layout for common laptop and desktop sizes.
+- Top toolbar with clear tool names or accessible tooltips; avoid ambiguous icon-only controls.
+- Include a prominent Full Screen button using the Fullscreen API. Also provide a keyboard shortcut and a visible way to exit full screen.
+- Show the active tool, active color, and pen size.
+- Ensure strong contrast, visible focus states, and keyboard accessibility.
+
+CORE DRAWING TOOLS
+1. Pen: smooth freehand strokes, adjustable thickness, color selection.
+2. Sketch pencil: a softer/sketch-like stroke style; adjustable thickness and opacity if feasible.
+3. Brush: broader/softer stroke style; adjustable thickness and opacity if feasible.
+4. Shape tools: at minimum rectangle, ellipse, straight line, and arrow. Support drawing a rectangle by dragging.
+5. Text: editable text objects with configurable font size and color. A rectangle can optionally be used as a text container:
+   - Draw a rectangle and release the pointer to finish the shape.
+   - Clicking the completed rectangle should select it and show a clear “Add/Edit text” action or enter text editing on double-click.
+   - Text entry must not accidentally start a new stroke.
+   - Text should remain editable after selection and after save/reopen.
+6. Selection: select, move, resize, and delete objects. Show clear selection handles and a delete action.
+7. Erasers: implement TWO distinct modes:
+   a. Object/area eraser: user selects an object or targets a specific stroke/shape and removes that selected item. If true partial stroke-segment erasing is supported, implement it accurately; otherwise label this tool “Object Eraser” and do not pretend it removes only a tiny part of a stroke.
+   b. Scribble eraser: user scribbles over the content to erase intersecting strokes/objects. Use geometric intersection or the canvas library's supported eraser mechanism. Make the behaviour predictable and visually responsive.
+8. Undo and redo for drawing, shape creation, text edits, moving/resizing, and erasing.
+9. Clear canvas with a confirmation step.
+10. Optional export to PNG and save/load the editable project as JSON using local browser download/file-picker mechanisms. Do not require a server.
+
+KEYBOARD AND POINTER INTERACTION MODEL
+Implement a central interaction state machine. Do not scatter conflicting key checks across individual tools.
+
+A. Drawing mode toggle:
+- Press Ctrl+Shift together to toggle Drawing Mode ON or OFF.
+- Detect the chord robustly: both Ctrl and Shift must be held at the same time. Trigger once per chord, not repeatedly from key-repeat.
+- When Drawing Mode is ON, the active drawing tool responds to pointer drag.
+- When OFF, pointer input should select/interact with objects and should not create new strokes.
+- Ignore the shortcut while the user is typing in an input, textarea, contenteditable element, or text editor.
+- Prevent the browser's default action only when necessary and only for the recognized application shortcut.
+- Display a clear ON/OFF indicator in the toolbar.
+- Handle lost focus, keyup, and window blur safely so the app never gets stuck in a modifier state.
+
+B. Alt temporary interaction:
+- When Drawing Mode is ON and the user holds Alt, temporarily suspend drawing and allow hover/selection/interaction with existing objects.
+- When Alt is released, restore the previously active drawing mode.
+- Do not toggle Drawing Mode OFF just because Alt is pressed.
+- Avoid browser menu or native drag conflicts where possible; document platform/browser limitations.
+- If the pointer is already drawing when Alt is pressed, finish or cancel the current gesture safely; do not leave a stuck stroke.
+
+C. Pointer/touchpad:
+- Use Pointer Events (pointerdown, pointermove, pointerup, pointercancel) rather than separate mouse-only handlers.
+- Support mouse and laptop touchpad input. Support pen/stylus pressure when available, but do not require it.
+- Use pointer capture appropriately so drawing ends cleanly if the pointer leaves the canvas.
+- Prevent accidental page scrolling/selection while actively drawing on the canvas, without disabling normal page interaction outside the canvas.
+- Ensure coordinates remain correct after zoom, resize, fullscreen, and device-pixel-ratio changes.
+
+D. Suggested keyboard shortcuts:
+- Ctrl+Shift: toggle Drawing Mode.
+- Alt (held): temporary interaction/hover mode while drawing mode is enabled.
+- Ctrl+Z: undo.
+- Ctrl+Y or Ctrl+Shift+Z: redo, without conflicting with the drawing toggle.
+- Delete/Backspace: delete selected object, except while editing text.
+- Escape: cancel current gesture or exit text editing/selection state.
+- F or a documented shortcut: toggle fullscreen, while preserving the browser's normal Escape-to-exit-fullscreen behaviour.
+
+INTERACTION DETAILS / QUALITY
+- Separate application mode (drawing enabled/disabled) from selected tool (pen, sketch, brush, shape, text, eraser, select).
+- Make mode transitions deterministic and testable.
+- Clicking an existing shape in non-drawing mode selects it. Provide an obvious way to add/edit text.
+- Do not automatically create a text field merely because the user clicks empty canvas. The text behaviour should be contextual to a selected rectangle or the Text tool.
+- Provide a compact pen-size slider with a numeric value and sensible min/max.
+- Provide color picker and a small palette of useful colors.
+- Keep strokes crisp at different zoom levels and screen resolutions.
+- Use a single source of truth for application state.
+- Make toolbar controls work; no decorative/inert buttons.
+- Add helpful empty-state instructions showing the main shortcuts.
+- Provide sensible defaults: white canvas, dark UI, black pen, medium stroke width.
+
+PERSISTENCE AND FILE BEHAVIOUR
+- The app must work offline after delivery.
+- Prefer explicit Save Project / Open Project JSON controls so the user can keep editable drawings locally.
+- If localStorage is used for autosave, handle file:// browser restrictions and storage failures gracefully; do not make it the only save mechanism.
+- Do not claim that localStorage is guaranteed to work for file URLs.
+- PNG export should produce a usable image with the white canvas background.
+- JSON import must validate input and handle malformed files without crashing.
+
+IMPLEMENTATION STRUCTURE
+- Keep code readable and modular even if delivered as one HTML file.
+- Separate responsibilities conceptually: canvas engine, tools, keyboard manager, interaction state, history/undo-redo, persistence/export, and UI.
+- Add comments for non-obvious logic, especially modifier-key handling and eraser geometry.
+- Avoid unnecessary dependencies and overengineering.
+- Do not use React, Vue, Angular, TypeScript compilation, or a development server unless there is a compelling technical reason; the requested deliverable is a directly opened HTML file.
+
+TESTING / ACCEPTANCE CRITERIA
+Test in current desktop Chrome and Edge by opening the local index.html file directly:
+1. App launches from file:// with network disconnected.
+2. No server, terminal, npm, or installation is needed.
+3. Dark UI, white canvas, readable white toolbar text.
+4. Fullscreen enters and exits correctly.
+5. Ctrl+Shift toggles drawing mode exactly once per chord.
+6. Drawing mode ON + pointer drag creates strokes.
+7. Drawing mode OFF does not create strokes and allows object selection.
+8. Holding Alt while drawing is enabled temporarily suspends drawing; releasing Alt restores drawing.
+9. Pen, sketch, and brush styles are visibly distinct; size and color controls work.
+10. Rectangle, ellipse, line, and arrow tools work.
+11. A drawn rectangle can be selected and given editable text; editing does not create accidental strokes.
+12. Object eraser removes the intended selected/targeted object.
+13. Scribble eraser removes intersecting content predictably.
+14. Undo/redo restores all supported operations, including text and erasing.
+15. Save JSON, reopen JSON, and PNG export work without a server.
+16. Resizing and fullscreen do not offset pointer coordinates.
+17. No console errors during the core workflows.
+
+DELIVERABLES
+- index.html (complete runnable app)
+- README.txt (how to open locally, shortcuts, browser compatibility, library/license details)
+- Any strictly necessary local vendor asset(s), if the single-file requirement cannot be met.
+- A concise implementation summary and a checklist showing which acceptance tests passed.
+- Be honest about any unsupported behaviour or browser limitation. Do not claim a feature works unless tested.
+
+Before coding:
+1. Inspect the available local/offline library options and confirm the actual APIs/version.
+2. Choose the simplest architecture that satisfies the requirements.
+3. Explain any trade-offs briefly.
+Then implement and test the complete application.
