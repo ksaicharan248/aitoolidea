@@ -1,0 +1,16 @@
+Analyze my existing JavaScript CLI and evaluate whether migrating its processing engine to Go 1.26.3 is worthwhile.
+
+Focus on:
+
+1. Performance: Benchmark JSON parsing, processing 500K–600K logs per correlation ID, metadata extraction and output generation.
+2. Concurrency: Determine whether the CLI can efficiently handle 10, 50 and 100 simultaneous independent executions with large responses. Measure CPU, RAM, throughput, latency and maximum sustainable concurrency.
+3. Authentication: Evaluate authentication overhead, API credential reuse and HTTP connection management.
+4. Windows credentials: Evaluate how Go can securely and efficiently access Windows Credential Manager and Windows-integrated authentication, including any existing Node.js capabilities.
+5. Optimization: Identify bottlenecks and evaluate streaming, batching, bounded worker pools and backpressure.
+6. Benchmarking: Compare the existing Node.js implementation against an equivalent Go implementation using identical datasets and workloads.
+
+Preserve existing CLI commands, arguments and JSON output compatibility.
+
+Do not modify production code initially. Generate benchmark results, resource utilization metrics, performance comparisons and an actionable recommendation.
+
+Finally, decide whether to retain Node.js, adopt a hybrid architecture or migrate fully to Go. Base the decision on measured results, not assumptions. Do not perform a migration until I approve it.
